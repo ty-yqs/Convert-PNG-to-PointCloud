@@ -1,34 +1,55 @@
 # depth2ply
 
-这是一个用 C++ 编写的简单工具，将一组深度图（16-bit 或 32-bit）自动降噪并转换为 PLY 点云文件。
+Small C++ tool to denoise depth images and convert them into ASCII PLY point clouds.
 
-依赖
-- CMake
-- OpenCV (>=3.4)
+## Features
+- Supports 16-bit (mm) and 32-bit depth images.
+- Simple denoising pipeline: median blur followed by bilateral filter.
+- Optional per-pixel RGB color when matching RGB images are provided.
 
-构建
+## Dependencies
+- CMake (>= 3.10)
+- OpenCV (installed on your system)
+
+## Build
 ```bash
-mkdir build && cd build
-cmake ..
+mkdir -p build && cd build
+# If OpenCV is installed via Homebrew, you may need to point CMake to the OpenCV config:
+cmake -DOpenCV_DIR="$(brew --prefix opencv)/lib/cmake/opencv4" ..
 make -j
 ```
 
-用法
+## Run (example)
 ```bash
-./depth2ply --input /path/to/depths --output /path/to/out --fx 525 --fy 525 --cx 319.5 --cy 239.5 --scale 1000
+./build/depth2ply --input test_data/depths --rgb test_data/rgb --output out \
+	--fx 525 --fy 525 --cx 159.5 --cy 119.5 --scale 1000
 ```
 
-常用参数
-- `--input` 深度图目录（PNG/TIFF/EXR）
-- `--output` 输出 PLY 文件目录
-- `--fx/--fy/--cx/--cy` 相机内参
-- `--scale` 深度缩放（深度单位到米，例如 1000 表示深度以毫米存储）
-- `--rgb` 可选 RGB 图像目录（同名文件将被配对）
-- `--median` 中值滤波核大小（默认 3）
-- `--bd` 双边滤波直径（默认 5）
-- `--bsc` 双边滤波色彩 sigma（默认 10）
-- `--bsp` 双边滤波空间 sigma（默认 10）
+## Common command-line options
+- `--input` : Path to depth images (PNG/TIFF/EXR supported).
+- `--output` : Output directory for PLY files.
+- `--fx/--fy/--cx/--cy` : Camera intrinsics.
+- `--scale` : Depth scale factor (e.g. `1000` if depth is stored in millimeters).
+- `--rgb` : Optional path to RGB images. The tool will try to pair by filename, and will also attempt to replace a leading `depth_` prefix with `rgb_` if the direct match is missing.
+- `--median` : Median filter kernel size (default `3`).
+- `--bd` : Bilateral filter diameter (default `5`).
+- `--bsc` : Bilateral filter sigmaColor (default `10`).
+- `--bsp` : Bilateral filter sigmaSpace (default `10`).
 
-说明
-- 本项目在将深度图转换空间坐标时使用: x=(u-cx)*z/fx, y=(v-cy)*z/fy
-- 输出为 ASCII PLY，可在 Meshlab、CloudCompare 中打开
+## Output details
+- Point coordinates are computed with: x = (u - cx) * z / fx, y = (v - cy) * z / fy, where z is in meters.
+- Output format: ASCII PLY (can be opened in MeshLab or CloudCompare).
+
+## Test data
+- Use `tools/generate_test_images.py` to generate sample depth and RGB images into `test_data/depths` and `test_data/rgb`.
+
+## VSCode / IntelliSense tips
+- If the editor reports missing standard headers or OpenCV headers, ensure CMake has been run and `build/compile_commands.json` is generated:
+	```bash
+	cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOpenCV_DIR="$(brew --prefix opencv)/lib/cmake/opencv4" build
+	```
+- Then in VSCode run: `Developer: Reload Window` or `C/C++: Reset IntelliSense Database`.
+
+## FAQ / Troubleshooting
+- "Could not find OpenCVConfig.cmake": on macOS install OpenCV via Homebrew and point CMake to `$(brew --prefix opencv)/lib/cmake/opencv4`.
+- `bilateralFilter` assertions: the code converts depth to `CV_32F` before filtering; if you still see errors, please paste the terminal output.
