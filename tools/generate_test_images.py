@@ -8,7 +8,25 @@ Usage:
 """
 import os
 import numpy as np
-from PIL import Image
+try:
+    from PIL import Image
+except Exception:
+    try:
+        import imageio
+    except Exception:
+        raise ImportError("Pillow is required; install with 'pip install pillow' or install imageio as a fallback with 'pip install imageio'")
+
+    class _ImageWrapper:
+        @staticmethod
+        def fromarray(arr):
+            class _Saver:
+                def __init__(self, arr):
+                    self.arr = arr
+                def save(self, path):
+                    # imageio will handle numpy arrays including 16-bit PNGs
+                    imageio.imwrite(path, self.arr)
+            return _Saver(arr)
+    Image = _ImageWrapper
 
 OUT_DEPTH = os.path.join(os.path.dirname(__file__), '..', 'test_data', 'depths')
 OUT_RGB = os.path.join(os.path.dirname(__file__), '..', 'test_data', 'rgb')
