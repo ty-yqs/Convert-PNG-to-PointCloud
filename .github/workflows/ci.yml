@@ -45,19 +45,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libopencv-dev pkg-config
 
-      - name: Install OpenCV on macOS
+      - name: Install OpenCV on macOS (with retry)
         if: startsWith(matrix.os, 'macos')
         run: |
           brew update || true
-          brew install opencv
+          for i in 1 2 3; do
+            brew install opencv && break || echo "brew install opencv failed, retrying... ($i)" && sleep 15
+          done
 
       - name: Install OpenCV on Windows (vcpkg)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           git clone --depth=1 https://github.com/microsoft/vcpkg.git vcpkg
           .\vcpkg\bootstrap-vcpkg.bat
-          .\vcpkg\vcpkg install opencv:${{ matrix.triplet }}
-        shell: powershell
+          .\vcpkg\vcpkg.exe install opencv:${{ matrix.triplet }}
 
       - name: Configure CMake
         run: |
