@@ -1,5 +1,7 @@
 # depth2ply
 
+[English Documentation](README.md) | [中文文档](README.zh-Hans.md)
+
 这是一个小型的 C++ 工具，用于对深度图进行去噪并将其转换为 ASCII PLY 点云。
 
 ## 功能

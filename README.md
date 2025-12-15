@@ -1,5 +1,7 @@
 # depth2ply
 
+[English Documentation](README.md) | [中文文档](README.zh-Hans.md)
+
 Small C++ tool to denoise depth images and convert them into ASCII PLY point clouds.
 
 ## Features
